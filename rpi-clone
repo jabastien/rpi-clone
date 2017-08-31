@@ -1,6 +1,8 @@
 #!/bin/bash
 
-VERSION=1.7.2
+VERSION=1.7.3
+# Version 1.7.3 2017/08/31
+#	* Added -d for delete - useful for keeping in sync deleted src files, too
 # Version 1.7.2 2017/08/31
 #	* Added -u for unattended - useful for incremental cloning after 1st clone
 # Version 1.7.1	2017/08/19
@@ -83,7 +85,7 @@ fi
 usage()
 	{
 	echo ""
-	echo "usage: $PGM sdN {-v|--verbose} {-f|--force-initialize} {-s|--src-disk sdS} {-c|--cross-filesystems} {-x}"
+	echo "usage: $PGM sdN {-v|--verbose} {-f|--force-initialize} {-s|--src-disk sdS} {-c|--cross-filesystems} {-x} {-u|--unattended} {-d|--delete}"
 	echo "    -v - list all files as they are copied."
 	echo "    -f - force initialize the destination partitions"
 	echo "    -s sdS - specify sdS is the booted source disk to clone from."
@@ -92,6 +94,7 @@ usage()
 	echo "    -c - cross filesystem boundaries (include mounted drives)"
 	echo "    -x - use set -x for very verbose bash shell script debugging"
 	echo "    -u - unattended - bypasses confirmation and unmounting only"
+	echo "    -d - delete - deletes files from DST not on SRC anymore"
 	echo ""
 	echo "    Example:  $PGM sda"
 	echo "        Clones from booted SD card mmcblk0 or booted USB disk sd? to sda."
@@ -138,6 +141,7 @@ usage()
 VERBOSE=off
 UNATTENDED=off
 CROSS_FILESYSTEMS=off
+DELETE=off
 
 
 while [ "$1" ]
@@ -145,6 +149,9 @@ do
 	case "$1" in
 		-u|--unattended)
 			UNATTENDED=on
+			;;
+		-d|--delete)
+			DELETE=on
 			;;
 		-v|--verbose)
 			VERBOSE=on
@@ -184,6 +191,12 @@ do
 	esac
 	shift
 done
+
+if [ "$DELETE" == "on" ]
+then
+	RSYNC_OPTIONS="${RSYNC_OPTIONS} --delete"
+fi
+			
 
 SRC_BOOT_PARTITION_TYPE=`parted /dev/$SRC_DISK -ms p | grep "^1" | cut -f 5 -d:`
 SRC_ROOT_PARTITION_TYPE=`parted /dev/$SRC_DISK -ms p | grep "^2" | cut -f 5 -d:`
@@ -440,6 +453,7 @@ echo "Clone destination rootfs :  $DST_ROOT_PARTITION ($DST_ROOT_VOL_NAME) on ${
 echo "Clone destination bootfs :  $DST_BOOT_PARTITION on ${CLONE}/boot"
 echo "Verbose mode             :  $VERBOSE"
 echo "Unattended mode          :  $UNATTENDED"
+echo "Delete mode              :  $DELETE"
 echo "Cross filesystems        :  $CROSS_FILESYSTEMS"
 echo "==============================="
 
@@ -577,12 +591,13 @@ then
 	echo -n "Hit Enter when ready to unmount the /dev/$DST_DISK partitions..."
 	read resp
 fi
+
 echo "unmounting $CLONE/boot"
 umount $CLONE/boot
 
 echo "unmounting $CLONE"
 umount $CLONE
 
-echo "==============================="
+echo "=========== ALL DONE ==============="
 
 exit 0
