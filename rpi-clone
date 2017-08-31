@@ -1,6 +1,8 @@
 #!/bin/bash
 
-VERSION=1.7.1
+VERSION=1.7.2
+# Version 1.7.2 2017/08/31
+#	* Added -u for unattended - useful for incremental cloning after 1st clone
 # Version 1.7.1	2017/08/19
 #	* Bugfix: did not set SRC_ROOT when using -s option
 # Version 1.7	2017/08/19
@@ -33,7 +35,7 @@ VERSION=1.7.1
 
 PGM=`basename $0`
 
-RSYNC_OPTIONS="--force -rltWDEgoptx"
+RSYNC_OPTIONS="--force -rltWDEgoptxu"
 
 # Where to mount the disk filesystems to be rsynced.
 CLONE=/mnt/clone
@@ -89,6 +91,7 @@ usage()
 	echo "         Use with caution, be sure sdS is really the booted disk."
 	echo "    -c - cross filesystem boundaries (include mounted drives)"
 	echo "    -x - use set -x for very verbose bash shell script debugging"
+	echo "    -u - unattended - bypasses confirmation and unmounting only
 	echo ""
 	echo "    Example:  $PGM sda"
 	echo "        Clones from booted SD card mmcblk0 or booted USB disk sd? to sda."
@@ -133,12 +136,17 @@ usage()
 	}
 
 VERBOSE=off
+UNATTENDED=off
 CROSS_FILESYSTEMS=off
 
 
 while [ "$1" ]
 do
 	case "$1" in
+		-u|--unattended)
+			UNATTENDED=on
+			RSYNC_OPTIONS=${RSYNC_OPTIONS}u
+			;;
 		-v|--verbose)
 			VERBOSE=on
 			RSYNC_OPTIONS=${RSYNC_OPTIONS}v
@@ -432,6 +440,7 @@ echo "Clone destination disk   :  $DST_DISK"
 echo "Clone destination rootfs :  $DST_ROOT_PARTITION ($DST_ROOT_VOL_NAME) on ${CLONE}"
 echo "Clone destination bootfs :  $DST_BOOT_PARTITION on ${CLONE}/boot"
 echo "Verbose mode             :  $VERBOSE"
+echo "Unattended mode          :  $UNATTENDED"
 echo "Cross filesystems        :  $CROSS_FILESYSTEMS"
 echo "==============================="
 
@@ -439,14 +448,16 @@ echo "==============================="
 # If this is an SD card initialization, can watch progress of the clone
 # in another terminal with:  watch df -h
 #
-echo -n "Final check, is it Ok to proceed with the clone (yes/no)?: "
-read resp
-if [ "$resp" != "y" ] && [ "$resp" != "yes" ]
+if [ "$UNATTENDED" != "on" ]
 then
-	echo -e "Aborting the disk clone.\n"
-	exit 0
+	echo -n "Final check, is it Ok to proceed with the clone (yes/no)?: "
+	read resp
+	if [ "$resp" != "y" ] && [ "$resp" != "yes" ]
+	then
+		echo -e "Aborting the disk clone.\n"
+		exit 0
+	fi
 fi
-
 #
 # =========== End of Setup  ===========
 
@@ -562,15 +573,17 @@ echo ""
 # Eg. modify $CLONE/etc/hostname, $CLONE/etc/network/interfaces, etc
 # if I'm cloning into a card to be installed on another Pi.
 #
-echo -n "Hit Enter when ready to unmount the /dev/$DST_DISK partitions..."
-read resp
+if [ "$UNATTENDED" != "on" ]
+then
+	echo -n "Hit Enter when ready to unmount the /dev/$DST_DISK partitions..."
+	read resp
 
-echo "unmounting $CLONE/boot"
-umount $CLONE/boot
+	echo "unmounting $CLONE/boot"
+	umount $CLONE/boot
 
-echo "unmounting $CLONE"
-umount $CLONE
-
+	echo "unmounting $CLONE"
+	umount $CLONE
+fi
 
 echo "==============================="
 
