@@ -145,7 +145,6 @@ do
 	case "$1" in
 		-u|--unattended)
 			UNATTENDED=on
-			RSYNC_OPTIONS=${RSYNC_OPTIONS}u
 			;;
 		-v|--verbose)
 			VERBOSE=on
