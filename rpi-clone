@@ -179,7 +179,6 @@ do
 			fi
 			;;
 		-o|--set-hostname)
- 			shift
  			NEW_HOSTNAME=$1
  			SET_HOSTNAME=on
  			;;
