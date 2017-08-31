@@ -585,11 +585,13 @@ echo "$DATE  $HOSTNAME $PGM : clone to $DST_DISK ($DST_ROOT_VOL_NAME)" \
 
 if [ "$SET_HOSTNAME" = "on" ]
 then
+
 	echo ""
 	echo ""
 	echo -n "Source hostname is: ";  hostname
-	echo -n "Enter hostname for clone (do not leave blank): "
-	read NEW_HOSTNAME
+	while read -p 'Enter hostname for clone: ' NEW_HOSTNAME && [[ -z "$NEW_HOSTNAME" ]] ; do
+	echo "No, please, do not leave it blank!"
+	done
 	echo $NEW_HOSTNAME > $CLONE/etc/hostname
 	sed -i '/^127.0.1.1/ d' $CLONE/etc/hosts
 	echo 127.0.1.1 $NEW_HOSTNAME >> $CLONE/etc/hosts
@@ -618,6 +620,6 @@ umount $CLONE/boot
 echo " and $CLONE"
 umount $CLONE
 
-echo "============= ALL DONE ==============="
+echo "=============== ALL DONE ================"
 echo ""
 exit 0
