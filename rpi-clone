@@ -585,6 +585,8 @@ echo "$DATE  $HOSTNAME $PGM : clone to $DST_DISK ($DST_ROOT_VOL_NAME)" \
 
 if [ "$SET_HOSTNAME" = "on" ]
 then
+	echo ""
+	echo ""
 	echo -n "Source hostname is: ";  hostname
 	echo -n "Enter hostname for clone (do not leave blank): "
 	read NEW_HOSTNAME
@@ -617,4 +619,5 @@ echo " and $CLONE"
 umount $CLONE
 
 echo "============= ALL DONE ==============="
+echo ""
 exit 0
