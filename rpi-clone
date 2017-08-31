@@ -576,13 +576,12 @@ if [ "$UNATTENDED" != "on" ]
 then
 	echo -n "Hit Enter when ready to unmount the /dev/$DST_DISK partitions..."
 	read resp
-
-	echo "unmounting $CLONE/boot"
-	umount $CLONE/boot
-
-	echo "unmounting $CLONE"
-	umount $CLONE
 fi
+echo "unmounting $CLONE/boot"
+umount $CLONE/boot
+
+echo "unmounting $CLONE"
+umount $CLONE
 
 echo "==============================="
 
